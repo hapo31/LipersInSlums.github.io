@@ -1,0 +1,23 @@
+name: member_contains
+description: check if member contains on organization
+inputs:
+  member:
+    required: true
+  organization:
+    required: true
+
+outputs:
+  contains:
+    value: ${{ steps.contains.outputs.contains }}
+
+runs:
+  using: composite
+  steps:
+    - id: contains
+      env:
+        MEMBER: ${{ inputs.member }}
+        ORGANIZATION: ${{ inputs.organization }}
+      run: |
+        contains=`gh api orgs/${ORGANIZATION}/members/${MEMBER} | jq -r '.login[]' | wc -l`
+        echo "::set-output name=contains::$(echo $contains)"
+      shell: bash

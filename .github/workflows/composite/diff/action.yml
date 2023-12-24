@@ -1,4 +1,4 @@
-name: diff_dir
+name: diff_other_dir
 description: diff on dir
 
 inputs:
@@ -7,8 +7,6 @@ inputs:
 outputs:
   diff-count:
     value: ${{ steps.diff.outputs.diff-count }}
-  other-diff-count:
-    value: ${{ steps.diff.outputs.other-diff-count }}
     
 runs:
   using: composite
@@ -16,8 +14,9 @@ runs:
     - id: diff
       env:
         TARGET_BRANCH: ${{ github.base_ref }}
+        SUBDIR: ${{ inputs.subdir }}
       run: |
         git fetch origin ${TARGET_BRANCH}
-        count=`git diff origin/${TARGET_BRANCH} HEAD --name-only --relative=${{ inputs.subdir }} | wc -l`
+        count=`git diff origin/${TARGET_BRANCH} HEAD --name-only | grep -v ${SUBDIR} | wc -l`
         echo "::set-output name=diff-count::$(echo $count)"
       shell: bash

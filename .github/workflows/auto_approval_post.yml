@@ -1,0 +1,30 @@
+name: auto_approval_post
+
+on:
+  pull_request:
+    types:
+      - opened
+
+jobs:
+  using: composite
+  approve_merge:
+    if:  startsWith(github.head_ref, 'article/')
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      PR_NUMBER: ${{ github.event.number }}
+    steps:
+      - uses: ./.github/workflows/composite/member_contains
+        with:
+          member: ${{ github.actor }}
+          organization: ${{ github.repository_owner }}
+      - uses: actions/checkout@v3
+        if: ${{ steps.contains.outputs.contains > 1 }}
+      - uses: ./.github/workflows/diff_on_other_posts
+        with:
+          subdir: ${{ github.head_ref }}
+      - name: Approval PR
+      - if: ${{ steps.diff.outputs.diff-count == '0' }}
+        run: |
+          gh pr review $PR_NUMBER --approve
+          gh pr merge $PR_NUMBER --merge 
