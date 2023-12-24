@@ -1,4 +1,4 @@
-name: diff_other_dir
+name: diff
 description: diff on dir
 
 inputs:
