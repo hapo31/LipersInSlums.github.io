@@ -6,7 +6,6 @@ on:
       - opened
 
 jobs:
-  using: composite
   approve_merge:
     if:  startsWith(github.head_ref, 'article/')
     runs-on: ubuntu-latest
