@@ -1,18 +1,25 @@
-import fs from "fs";
-import { join } from "path";
+import * as fs from "fs";
+import path from "path";
 import matter from "gray-matter";
 import { RawPost, Post, parsePostSchema } from "@/model/Post";
 import parseHeadings from "@/lib/parseHeadings";
+type MarkdownDir = "_posts" | "_channels";
 
-const postsDirectory = join(process.cwd(), "_posts");
+type MarkDownBaseName = `${string}.md`;
 
-export function getPostSlugs(): string[] {
-  return fs.readdirSync(postsDirectory);
+type MarkDownPath<Dir extends MarkdownDir> = `${Dir}/${MarkDownBaseName}`;
+
+export function getFiles(dir: MarkdownDir): MarkDownBaseName[] {
+  return fs.readdirSync(dir) as MarkDownBaseName[];
 }
 
-function parsePost(slug: string): RawPost {
-  const realSlug = slug.replace(/\.md$/, "");
-  const fullPath = join(postsDirectory, `${realSlug}.md`);
+export function getPostSlugs(): MarkDownBaseName[] {
+  return getFiles("_posts");
+}
+
+function parsePost(slugPath: MarkDownPath<"_posts">): RawPost {
+  const realSlug = (slugPath.split("/").pop() ?? "").replace(/\.md$/, "");
+  const fullPath = path.resolve(slugPath);
   const fileContents = fs.readFileSync(fullPath, "utf8");
   const { content, data } = matter(fileContents);
 
@@ -26,14 +33,15 @@ function parsePost(slug: string): RawPost {
   };
 }
 
-export function getPostBySlug(slug: string): Post {
-  const { parsed, ...data } = parsePost(slug);
+export function getPostBySlug(slug: MarkDownBaseName): Post {
+  const { parsed, ...data } = parsePost(`_posts/${slug}`);
 
   return { ...parsed, ...data };
 }
 
 export function getAllPosts(): Post[] {
   const slugs = getPostSlugs();
+
   const posts = slugs
     .map((slug) => getPostBySlug(slug))
     // sort posts by date in descending order
